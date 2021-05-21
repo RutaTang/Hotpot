@@ -4,14 +4,12 @@ from werkzeug.serving import run_simple
 from werkzeug.wrappers import Response as ResponseBase
 from werkzeug.routing import Map, Rule, MapAdapter
 from werkzeug.exceptions import HTTPException
-from werkzeug.utils import redirect as werkzeug_redirect
 
 from .globals import AppGlobal
 from .wrappers import Request, JSONResponse
 
 
-def redirect(location, code=302):
-    return werkzeug_redirect(location=location, code=code)
+
 
 
 class Hotpot(object):
