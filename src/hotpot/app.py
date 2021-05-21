@@ -1,38 +1,13 @@
-import functools
-import time
-
-import json
-import os
 from typing import Callable, Union
-from werkzeug.wrappers import Response as ResponseBase, Request as RequestBase
+
 from werkzeug.serving import run_simple
+from werkzeug.wrappers import Response as ResponseBase
 from werkzeug.routing import Map, Rule, MapAdapter
 from werkzeug.exceptions import HTTPException
 from werkzeug.utils import redirect as werkzeug_redirect
-from tinydb import TinyDB
 
-
-class AppGlobal(dict):
-    def __init__(self):
-        super().__init__()
-
-    def __getattribute__(self, item):
-        return self[item]
-
-    def __setattr__(self, key, value):
-        self[key] = value
-
-
-class Request(RequestBase):
-    pass
-
-
-class JSONResponse(ResponseBase):
-    default_mimetype = "application/json"
-
-    def __init__(self, json_object, **kwargs):
-        json_str = json.dumps(json_object)
-        super(JSONResponse, self).__init__(response=json_str, **kwargs)
+from .globals import AppGlobal
+from .wrappers import Request, JSONResponse
 
 
 def redirect(location, code=302):
@@ -41,7 +16,11 @@ def redirect(location, code=302):
 
 class Hotpot(object):
     """
-    app = Hotpot()
+    This is the core part of the web framework.
+    WSGI Server will call the instance of this Class to process request.
+
+    Ex.
+    app = Hotpot(config={})
     @app.route("/)
     def index(request,**values):
         return {"Example":True}
@@ -52,7 +31,7 @@ class Hotpot(object):
         self.view_functions = {}
         self.config = config
         # init AppGlobal
-        self._init_app_global()
+        self.app_global = AppGlobal()
         # Other methods need to run before app real end
         self._after_app_end = []
         # before_request
@@ -60,9 +39,33 @@ class Hotpot(object):
         # after_request
         self._after_request = []
 
-    # Decorator
-    # @app.before_app_run
+    def __del__(self):
+        # run all methods which after app end
+        for f in self._after_app_end:
+            f()
+
+    def __call__(self, environ, start_response):
+        # Request Start, call all methods in _before_request
+        for f in self._before_request:
+            f()
+        wsgi_app_response = self.wsgi_app(environ=environ, start_response=start_response)
+        # Request End, call all methods in _after_request
+        for f in self._after_request:
+            f()
+        return wsgi_app_response
+
+    # -------------Decorator Begin-------------
+
     def before_app(self):
+        """
+        Run methods as app init
+        Ex.
+        @before_app()
+        def init_db():
+            print("init db")
+        :return:
+        """
+
         def decorator(f):
             f()
             return f
@@ -70,6 +73,11 @@ class Hotpot(object):
         return decorator
 
     def after_app(self):
+        """
+        Run methods as app del
+        :return:
+        """
+
         def decorator(f):
             self._after_app_end.append(f)
             return f
@@ -77,6 +85,11 @@ class Hotpot(object):
         return decorator
 
     def before_request(self):
+        """
+        Run methods before each request
+        :return:
+        """
+
         def decorator(f):
             self._before_request.append(f)
             return f
@@ -84,36 +97,27 @@ class Hotpot(object):
         return decorator
 
     def after_request(self):
+        """
+        Run methods after each request
+        :return:
+        """
+
         def decorator(f):
             self._after_request.append(f)
             return f
 
         return decorator
 
-    def __del__(self):
-        # run all methods which after app end
-        for f in self._after_app_end:
-            f()
-        # del AppGlobal
-        self._del_app_global()
-
-    def _init_app_global(self):
-        self.app_global = AppGlobal()
-
-    def _del_app_global(self):
-        del self.app_global
-
-    def __call__(self, environ, start_response):
-        # Request Start
-        for f in self._before_request:
-            f()
-        wsgi_app_response = self.wsgi_app(environ=environ, start_response=start_response)
-        # Request End
-        for f in self._after_request:
-            f()
-        return wsgi_app_response
+    # -------------Decorator End -------------
 
     def run(self, hostname='localhost', port=8080, debug=True):
+        """
+        Simple WSGI Server for development other than production
+        :param hostname:
+        :param port:
+        :param debug: if debug is True, automatically reload while file changes
+        :return:
+        """
         run_simple(hostname, port, self, use_reloader=debug, use_debugger=debug)
 
     def dispatch_request(self, request) -> Union[ResponseBase, HTTPException]:
@@ -142,6 +146,17 @@ class Hotpot(object):
         return response(environ, start_response)
 
     def route(self, rule, **options):
+        """
+        Map url path to view functions (or say endpoints)
+        Ex.
+        @route("/")
+        def index(request):
+            return {}
+        :param rule: url path, like "/"
+        :param options:
+        :return:
+        """
+
         def decorator(f: Callable):
             self.view_functions[f.__name__] = f
             self.url_map.add(Rule(rule, endpoint=f.__name__))

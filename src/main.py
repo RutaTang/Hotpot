@@ -9,17 +9,12 @@ app = Hotpot(config={})
 
 @app.before_app()
 def init_db():
-    print("App Start")
-    db_path = app.config.pop("db_path", "./default.json")
-    db = TinyDB(db_path)
-    app.db = db
+    pass
 
 
 @app.after_app()
 def del_db():
-    db = app.db  # type: TinyDB
-    db.close()
-    print("App End")
+    pass
 
 
 @app.route("/")
