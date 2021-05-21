@@ -9,6 +9,7 @@ app = Hotpot(config={})
 
 @app.before_app()
 def init_db():
+    print("App Start")
     db_path = app.config.pop("db_path", "./default.json")
     db = TinyDB(db_path)
     app.db = db
@@ -18,6 +19,7 @@ def init_db():
 def del_db():
     db = app.db  # type: TinyDB
     db.close()
+    print("App End")
 
 
 @app.route("/")
@@ -37,7 +39,5 @@ def count(request):
 @app.route("/article")
 def article(request):
     return redirect(location="/")
-
-print("1")
 
 # app.run(debug=True)

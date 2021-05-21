@@ -55,6 +55,10 @@ class Hotpot(object):
         self._init_app_global()
         # Other methods need to run before app real end
         self._after_app_end = []
+        # before_request
+        self._before_request = []
+        # after_request
+        self._after_request = []
 
     # Decorator
     # @app.before_app_run
@@ -68,6 +72,20 @@ class Hotpot(object):
     def after_app(self):
         def decorator(f):
             self._after_app_end.append(f)
+            return f
+
+        return decorator
+
+    def before_request(self):
+        def decorator(f):
+            self._before_request.append(f)
+            return f
+
+        return decorator
+
+    def after_request(self):
+        def decorator(f):
+            self._after_request.append(f)
             return f
 
         return decorator
@@ -87,8 +105,12 @@ class Hotpot(object):
 
     def __call__(self, environ, start_response):
         # Request Start
+        for f in self._before_request:
+            f()
         wsgi_app_response = self.wsgi_app(environ=environ, start_response=start_response)
         # Request End
+        for f in self._after_request:
+            f()
         return wsgi_app_response
 
     def run(self, hostname='localhost', port=8080, debug=True):
