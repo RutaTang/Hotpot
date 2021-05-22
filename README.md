@@ -1,6 +1,8 @@
 # Hotpot
 
-![Hotpot](https://github.com/RutaTang/Hotpot/blob/master/artworks/hotpot.png?raw=true)
+<div style="text-align: center">
+<img src="https://github.com/RutaTang/Hotpot/blob/master/artworks/hotpot.png?raw=true" style="width: 150px;height: 150px;">
+</div>
 
 **A tiny and easy python web framework just for your fun! :)**
 
