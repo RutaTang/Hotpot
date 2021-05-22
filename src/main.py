@@ -58,4 +58,9 @@ def view_404():
     return JSONResponse({"HttpException": 404})
 
 
+@app.after_request()
+def x_test(request):
+    print(request.path)
+
+
 app.run()

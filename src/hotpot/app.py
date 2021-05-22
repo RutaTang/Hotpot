@@ -127,6 +127,11 @@ class Hotpot(object):
     def after_request(self):
         """
         Run methods after each request
+        f must have a parameter position to get request: f(request)
+        Ex.
+        @after_request()
+        def after_request(request):
+            pass
         :return:
         """
 
@@ -151,6 +156,11 @@ class Hotpot(object):
     def after_response(self):
         """
         Run methods after each response
+        f must have a parameter position to get response: f(response)
+        Ex.
+        @after_response()
+        def after_response(response):
+            pass
         :return:
         """
 
@@ -204,7 +214,7 @@ class Hotpot(object):
         request = Request(environ)
         # Request End, call all methods in _after_request
         for f in self._after_request:
-            f()
+            f(request)
 
         # Response Star, call all methods in _before_response
         for f in self._before_response:
@@ -212,7 +222,7 @@ class Hotpot(object):
         response = self.dispatch_request(request=request)
         # Response End, call all methods in _after_response
         for f in self._after_response:
-            f()
+            f(response)
 
         return response(environ, start_response)
 
