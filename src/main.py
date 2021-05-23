@@ -16,7 +16,7 @@ app.combine_app(other_app)
 
 @app.after_app()
 def del_db(_app: Hotpot):
-    _app.app_global.db = dict()
+    print("Del")
 
 
 @app.route("/")

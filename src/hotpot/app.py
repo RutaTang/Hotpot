@@ -24,7 +24,7 @@ class Hotpot(object):
         return {"Example":True}
     """
 
-    def __init__(self):
+    def __init__(self, main_app=True):
         self.url_map = Map([])
         self.view_functions = {}
         self.config = {
@@ -35,6 +35,8 @@ class Hotpot(object):
             # security key for session
             "security_key": b'YgHfXTZRK1t_tTGOh139WEpEii5gkqobuD89U7er1Ls=',
         }
+        # main_app for checking whether the app is considered as main app or combined to the main app
+        self.main_app = main_app
         # security key for session ref to config['security_key']
         self.security_key = self.config.get("security_key", b'YgHfXTZRK1t_tTGOh139WEpEii5gkqobuD89U7er1Ls=')
         # init AppGlobal
@@ -87,13 +89,14 @@ class Hotpot(object):
         for f in other_app._after_response:
             self._after_response.append(f)
 
-        #Finnaly Del the other app
+        # Finnaly Del the other app
         del other_app
 
     def __del__(self):
         # run all methods which after app end
-        for f in self._after_app:
-            f(self)
+        if self.main_app:
+            for f in self._after_app:
+                f(self)
 
     def __call__(self, environ, start_response):
         wsgi_app_response = self.wsgi_app(environ=environ, start_response=start_response)
@@ -229,19 +232,19 @@ class Hotpot(object):
     def wsgi_app(self, environ, start_response):
         # Request Start, call all methods in _before_request
         for f in self._before_request:
-            f()
+            f(self)
         request = Request(environ)
         # Request End, call all methods in _after_request
         for f in self._after_request:
-            request = f(request)
+            request = f(self, request)
 
         # Response Star, call all methods in _before_response
         for f in self._before_response:
-            f()
+            f(self)
         response = self.dispatch_request(request=request)
         # Response End, call all methods in _after_response
         for f in self._after_response:
-            response = f(response)
+            response = f(self, response)
 
         return response(environ, start_response)
 

@@ -68,7 +68,7 @@ class TestApp(TestCase):
             return {"index": True}
 
         @self.app.after_request()
-        def after_request(request) -> RequestBase:
+        def after_request(_app,request) -> RequestBase:
             environ = request.environ
             environ['PATH_INFO'] = "/"
             new_request = RequestBase(environ)
@@ -82,7 +82,7 @@ class TestApp(TestCase):
             return {"index": True}
 
         @self.app.after_response()
-        def after_response(response: ResponseBase) -> ResponseBase:
+        def after_response(_app,response: ResponseBase) -> ResponseBase:
             response = ResponseBase(response=r'{"test":true}')
             return response
 
