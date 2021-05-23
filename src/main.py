@@ -14,15 +14,13 @@ app.app_global.db = {"uid": "1", "username": "hotpot", "pwd": "123"}
 app.combine_app(other_app)
 
 
-
 @app.after_app()
-def del_db(current_app: Hotpot):
-    current_app.app_global.db = dict()
+def del_db(_app: Hotpot):
+    _app.app_global.db = dict()
 
 
 @app.route("/")
-def index(mapp, request):
-    print(mapp)
+def index(_app, request):
     json_object = {
         "Index": True,
     }
@@ -30,13 +28,16 @@ def index(mapp, request):
 
 
 @app.route("/user_info")
-@login_required(security_key=app.security_key, fail_redirect=redirect("/"))
-def user_info(mapp, request):
-    return app.app_global.db
+def user_info(_app, request):
+    @login_required(security_key=_app.security_key, fail_redirect=redirect("/"))
+    def _user_info(_app, request):
+        return _app.app_global.db
+
+    return _user_info(_app, request)
 
 
 @app.route("/login")
-def login(mapp, request):
+def login(_app, request):
     if request.method == "POST":
         username = request.form['username']
         pwd = request.form['pwd']
@@ -49,7 +50,7 @@ def login(mapp, request):
 
 
 @app.route("/logout")
-def logout(mapp, request):
+def logout(_app, request):
     response = JSONResponse(json_object={"Logout Status": "Successful"})
     logout_(response)
     return response

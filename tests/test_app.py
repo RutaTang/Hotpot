@@ -24,11 +24,11 @@ class TestApp(TestCase):
     # TODO: more app test
     def test_no_parameter_route(self):
         @self.app.route("/index1")
-        def index1(request: Request):
+        def index1(_app, request: Request):
             return {"index": 1}
 
         @self.app.route("/index2")
-        def index2(request: Request):
+        def index2(_app,request: Request):
             response = JSONResponse({"index": 2})
             return response
 
@@ -37,11 +37,11 @@ class TestApp(TestCase):
 
     def test_parameter_route(self):
         @self.app.route("/year/<int:year>/")
-        def view_year(request: Request, year: int):
+        def view_year(_app,request: Request, year: int):
             return {"year": year}
 
         @self.app.route("/name/<string:name>/")
-        def view_name(request: Request, name: str):
+        def view_name(_app,request: Request, name: str):
             return {"name": name}
 
         self.assertEqual(self.get_response_body("/year/2021/"), r'{"year": 2021}')
@@ -64,7 +64,7 @@ class TestApp(TestCase):
 
     def test_decorator_after_request(self):
         @self.app.route("/")
-        def index(request):
+        def index(_app,request):
             return {"index": True}
 
         @self.app.after_request()
@@ -78,7 +78,7 @@ class TestApp(TestCase):
 
     def test_decorator_after_response(self):
         @self.app.route("/")
-        def index(request):
+        def index(_app,request):
             return {"index": True}
 
         @self.app.after_response()
