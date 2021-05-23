@@ -53,20 +53,42 @@ class Hotpot(object):
         self.exception_all = None
         self.exception_404 = lambda e: ResponseBase("Not Found")
 
-    def add_config(self, config: Union[dict, str]):
-        """
-        Add Config to self.config
-        :param config: dict or str; if str, it should be a path.
-        :return:
-        """
-        if isinstance(config, dict):
-            self.config = config
-        elif isinstance(config, str):
-            config_parser = configparser.ConfigParser()
-            config_parser.read(config)
-            self.config = config_parser._sections
-        else:
-            raise TypeError("config should be dict or str (path)")
+    def combine_app(self, other_app: 'Hotpot'):
+
+        # combine self and other app url_map together
+        for _, rule_list in other_app.url_map._rules_by_endpoint.items():
+            rule = rule_list[0]  # type:Rule
+            self.url_map.add(rule.empty())
+
+        # combine self and other app view_functions together
+        for function_name, view_function in other_app.view_functions.items():
+            self.view_functions[function_name] = view_function
+
+        # Note: Config will not be influenced or changed by combing other app
+        # Same as: security_key,app_global,exception_all,exception_404
+
+        # combine self and other before_app function together
+        for f in other_app._after_app:
+            self._after_app.append(f)
+
+        # combine self and other before_request function together
+        for f in other_app._before_request:
+            self._before_request.append(f)
+
+        # combine self and other after_request function together
+        for f in other_app._after_request:
+            self._after_request.append(f)
+
+        # combine self and other before_response function together
+        for f in other_app._before_response:
+            self._before_response.append(f)
+
+        # combine self and other before_response function together
+        for f in other_app._after_response:
+            self._after_response.append(f)
+
+        #Finnaly Del the other app
+        del other_app
 
     def __del__(self):
         # run all methods which after app end
@@ -152,6 +174,21 @@ class Hotpot(object):
 
     # -------------Decorator End -------------
 
+    def add_config(self, config: Union[dict, str]):
+        """
+        Add Config to self.config
+        :param config: dict or str; if str, it should be a path.
+        :return:
+        """
+        if isinstance(config, dict):
+            self.config = config
+        elif isinstance(config, str):
+            config_parser = configparser.ConfigParser()
+            config_parser.read(config)
+            self.config = config_parser._sections
+        else:
+            raise TypeError("config should be dict or str (path)")
+
     def run(self):
         """
         Simple WSGI Server for development other than production
@@ -175,7 +212,7 @@ class Hotpot(object):
             #   return {"Name":""}
             #   #or
             #   return Response()
-            response_or_dict = self.view_functions[endpoint](request, **values)
+            response_or_dict = self.view_functions[endpoint](self, request, **values)
             if isinstance(response_or_dict, dict):
                 return JSONResponse(response_or_dict)
             elif isinstance(response_or_dict, ResponseBase):

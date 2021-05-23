@@ -5,6 +5,8 @@ from werkzeug.utils import redirect as werkzeug_redirect
 from werkzeug.wrappers import Request as RequestBase, Response as ResponseBase
 from .sessions import get_session, set_session, clear_session
 
+from .app import Hotpot
+
 
 def redirect(location, code=302):
     """
@@ -59,16 +61,15 @@ def login_required(security_key: bytes, fail_redirect: ResponseBase):
 
     def wrapper(f):
         @functools.wraps(f)
-        def decorator(request: RequestBase):
+        def decorator(app: 'Hotpot', request: RequestBase):
             session_info = get_session(request, security_key=security_key)
             uid = session_info.get('uid', None)
             if uid is None:
                 return fail_redirect
             if len(str(uid)) == 0:
                 return fail_redirect
-            return f(request)
+            return f(app,request)
 
         return decorator
 
     return wrapper
-

@@ -86,8 +86,27 @@ class TestApp(TestCase):
             response = ResponseBase(response=r'{"test":true}')
             return response
 
-        self.assertEqual(r'{"test":true}',self.get_response_body("/"))
-
+        self.assertEqual(r'{"test":true}', self.get_response_body("/"))
 
     # TODO: test all decorator before_xxx
-    
+
+    # TODO: test http exception view
+
+    def test_view_exception_all(self):
+        @self.app.view_exception_all()
+        def view_exception_all(error):
+            return JSONResponse({"Custom HttpException": True})
+
+        @self.app.view_exception_404()
+        def view_exception_404(error):
+            return JSONResponse({"Not Found": True})
+
+        self.assertNotEqual(self.get_response_body("/"), r'{"Not Found": true}')
+        self.assertEqual(self.get_response_body("/"), r'{"Custom HttpException": true}')
+
+    def test_view_exception_404(self):
+        @self.app.view_exception_404()
+        def view_exception_404(error):
+            return JSONResponse({"Not Found": True})
+
+        self.assertEqual(self.get_response_body("/"), r'{"Not Found": true}')
