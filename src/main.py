@@ -53,9 +53,16 @@ def logout(request):
     return response
 
 
-@app.view_404()
-def view_404():
+@app.view_exception_404()
+def view_exception_404(error):
+    print(error)
     return JSONResponse({"HttpException": 404})
+
+
+@app.view_exception_all()
+def view_exception_all(error):
+    print(error)
+    return JSONResponse({"CustomException": 000})
 
 
 @app.after_request()

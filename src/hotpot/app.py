@@ -52,7 +52,8 @@ class Hotpot(object):
         # after_response
         self._after_response = []
         # HttpExceptions view functions
-        self.exception_404 = ResponseBase("Not Found")
+        self.exception_all = None
+        self.exception_404 = lambda e: ResponseBase("Not Found")
 
         # run all before app methods
         for f in self._before_app:
@@ -203,8 +204,10 @@ class Hotpot(object):
             else:
                 raise HTTPException("Service Error: Unsupported Response")
         except HTTPException as e:
+            if self.exception_all is not None:
+                return self.exception_all(e)
             if isinstance(e, NotFound):
-                return self.exception_404
+                return self.exception_404(e)
             return e
 
     def wsgi_app(self, environ, start_response):
@@ -244,17 +247,40 @@ class Hotpot(object):
 
         return decorator
 
-    def view_404(self):
+    # -----------handle http exception Start-----------
+    def view_exception_all(self):
         """
-        set view for http 404
-        Ex.
-        @app.view_404()
-        def view_404():
-            return JSONResponse({"HttpException": 404})
-        :return: must be instance of ResponseBase or its children class
+       set custom views for all http exceptions
+       Ex.
+       @app.view_exception_all()
+       def view_exception_all(error):
+           if isinstance(error,NOT_FOUND):
+                return JSONResponse({"Not_Found": 404})
+           return JSONResponse({"": 000})
+       :return:
+
+       Note: if use this function, all other view exception will not work.
         """
 
         def decorator(f: Callable[[], ResponseBase]):
-            self.exception_404 = f()
+            self.exception_all = f
 
         return decorator
+
+    def view_exception_404(self):
+        """
+        set view for http 404
+        Ex.
+        @app.view_exception_404()
+        def view_exception_404(error):
+            print(error)
+            return JSONResponse({"HttpException": 404})
+        :return:
+        """
+
+        def decorator(f: Callable[[], ResponseBase]):
+            self.exception_404 = f
+
+        return decorator
+
+    # -----------handle http exception End-----------
