@@ -3,7 +3,7 @@ import configparser
 import base64
 
 from werkzeug.serving import run_simple
-from werkzeug.wrappers import Response as ResponseBase
+from werkzeug.wrappers import Response as ResponseBase, Request as RequestBase
 from werkzeug.routing import Map, Rule, MapAdapter
 from werkzeug.exceptions import HTTPException, NotFound
 from cryptography.fernet import Fernet
@@ -39,8 +39,6 @@ class Hotpot(object):
         self.security_key = self.config.get("security_key", b'YgHfXTZRK1t_tTGOh139WEpEii5gkqobuD89U7er1Ls=')
         # init AppGlobal
         self.app_global = AppGlobal()
-        # before_app
-        self._before_app = []
         # after_app
         self._after_app = []
         # before_request
@@ -54,10 +52,6 @@ class Hotpot(object):
         # HttpExceptions view functions
         self.exception_all = None
         self.exception_404 = lambda e: ResponseBase("Not Found")
-
-        # run all before app methods
-        for f in self._before_app:
-            f()
 
     def add_config(self, config: Union[dict, str]):
         """
@@ -77,29 +71,13 @@ class Hotpot(object):
     def __del__(self):
         # run all methods which after app end
         for f in self._after_app:
-            f()
+            f(self)
 
     def __call__(self, environ, start_response):
         wsgi_app_response = self.wsgi_app(environ=environ, start_response=start_response)
         return wsgi_app_response
 
     # -------------Decorator Begin-------------
-
-    def before_app(self):
-        """
-        Run methods as app init
-        Ex.
-        @before_app()
-        def init_db():
-            print("init db")
-        :return:
-        """
-
-        def decorator(f):
-            self._before_app.append(f)
-            return f
-
-        return decorator
 
     def after_app(self):
         """
@@ -128,15 +106,16 @@ class Hotpot(object):
     def after_request(self):
         """
         Run methods after each request
-        f must have a parameter position to get request: f(request)
+        f must have a parameter position to get request and return a request: f(request)->RequestBase
         Ex.
         @after_request()
-        def after_request(request):
-            pass
+        def after_request(request) -> RequestBase:
+            environ = request.environ
+            return RequestBase(environ)
         :return:
         """
 
-        def decorator(f):
+        def decorator(f: Callable[[RequestBase], RequestBase]):
             self._after_request.append(f)
             return f
 
@@ -157,11 +136,11 @@ class Hotpot(object):
     def after_response(self):
         """
         Run methods after each response
-        f must have a parameter position to get response: f(response)
+        f must have a parameter position to get response and return a response: f(response) -> ResponseBase
         Ex.
         @after_response()
-        def after_response(response):
-            pass
+        def after_response(response) -> ResponseBase:
+
         :return:
         """
 
@@ -217,7 +196,7 @@ class Hotpot(object):
         request = Request(environ)
         # Request End, call all methods in _after_request
         for f in self._after_request:
-            f(request)
+            request = f(request)
 
         # Response Star, call all methods in _before_response
         for f in self._before_response:
@@ -225,7 +204,7 @@ class Hotpot(object):
         response = self.dispatch_request(request=request)
         # Response End, call all methods in _after_response
         for f in self._after_response:
-            f(response)
+            response = f(response)
 
         return response(environ, start_response)
 

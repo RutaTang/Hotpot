@@ -11,14 +11,11 @@ from werkzeug.serving import run_simple
 app = Hotpot()
 
 
-@app.before_app()
-def init_db():
-    print(app.config)
 
 
 @app.after_app()
 def del_db():
-    pass
+    print("del")
 
 
 @app.route("/")
