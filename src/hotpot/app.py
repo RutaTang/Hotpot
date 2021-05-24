@@ -25,6 +25,7 @@ class Hotpot(object):
     """
 
     def __init__(self, main_app=True):
+        self.url_map_dict = dict()
         self.url_map = Map([])
         self.view_functions = {}
         self.config = {

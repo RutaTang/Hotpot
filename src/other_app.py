@@ -4,8 +4,8 @@ from hotpot.utils import login_required, redirect
 app = Hotpot(main_app=False)
 
 
-@app.route("/from_other_app")
-def index_from_other_app(_app: 'Hotpot', requst):
+@app.route("/")
+def index(_app: 'Hotpot', requst):
     return {"Index": "From Other App"}
 
 

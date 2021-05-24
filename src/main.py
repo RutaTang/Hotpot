@@ -11,6 +11,8 @@ from werkzeug.serving import run_simple
 
 app = Hotpot()
 app.app_global.db = {"uid": "1", "username": "hotpot", "pwd": "123"}
+
+
 app.combine_app(other_app)
 
 
@@ -23,6 +25,14 @@ def del_db(_app: Hotpot):
 def index(_app, request):
     json_object = {
         "Index": True,
+    }
+    return json_object
+
+
+@app.route("/")
+def index(_app, request):
+    json_object = {
+        "Index": False,
     }
     return json_object
 
