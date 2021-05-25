@@ -5,7 +5,21 @@ from werkzeug.utils import redirect as werkzeug_redirect
 from werkzeug.wrappers import Request as RequestBase, Response as ResponseBase
 from .sessions import get_session, set_session, clear_session
 
-from .app import Hotpot
+
+def join_rules(*rules):
+    tmp_rule = ''.join([str(r) for r in rules])
+    rule = ''
+    meet_slash = False
+    for i, c in enumerate(tmp_rule):
+        if c == "/" and not meet_slash:
+            rule = rule + c
+            meet_slash = True
+        if c == "/" and meet_slash:
+            continue
+        if c != "/":
+            rule = rule + c
+            meet_slash = False
+    return rule
 
 
 def redirect(location, code=302):
@@ -68,7 +82,7 @@ def login_required(security_key: bytes, fail_redirect: ResponseBase):
                 return fail_redirect
             if len(str(uid)) == 0:
                 return fail_redirect
-            return f(app,request)
+            return f(app, request)
 
         return decorator
 

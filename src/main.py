@@ -9,7 +9,7 @@ from src.other_app import app as other_app
 from tinydb import TinyDB
 from werkzeug.serving import run_simple
 
-app = Hotpot()
+app = Hotpot(base_rule="/app/")
 app.app_global.db = {"uid": "1", "username": "hotpot", "pwd": "123"}
 
 
@@ -21,15 +21,15 @@ def del_db(_app: Hotpot):
     print("Del")
 
 
-@app.route("/")
-def index(_app, request):
-    json_object = {
-        "Index": True,
-    }
-    return json_object
+# @app.route("/",endpoint="index_endpoint")
+# def index(_app, request):
+#     json_object = {
+#         "Index": True,
+#     }
+#     return json_object
 
 
-@app.route("/")
+@app.route("/index")
 def index(_app, request):
     json_object = {
         "Index": False,

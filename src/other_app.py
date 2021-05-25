@@ -1,36 +1,9 @@
 from hotpot.app import Hotpot
 from hotpot.utils import login_required, redirect
 
-app = Hotpot(main_app=False)
+app = Hotpot(main_app=False,base_rule="/other_app/",name="other_app")
 
 
-@app.route("/")
-def index(_app: 'Hotpot', requst):
+@app.route("/index")
+def index(_app: 'Hotpot', request):
     return {"Index": "From Other App"}
-
-
-@app.before_request()
-def before_request(_app):
-    print("before request from other app")
-
-
-@app.after_request()
-def after_request(_app, request):
-    print("after request from other app")
-    return request
-
-
-@app.before_response()
-def before_response(_app):
-    print("before response from other app")
-
-
-@app.after_response()
-def after_response(_app, response):
-    print("after response from other app")
-    return response
-
-
-@app.after_app()
-def after_app(_app):
-    print("Del2")

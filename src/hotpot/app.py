@@ -10,6 +10,7 @@ from cryptography.fernet import Fernet
 
 from .globals import AppGlobal
 from .wrappers import Request, JSONResponse
+from .utils import join_rules
 
 
 class Hotpot(object):
@@ -24,8 +25,7 @@ class Hotpot(object):
         return {"Example":True}
     """
 
-    def __init__(self, main_app=True):
-        self.url_map_dict = dict()
+    def __init__(self, main_app=True, name="", base_rule="/"):
         self.url_map = Map([])
         self.view_functions = {}
         self.config = {
@@ -38,6 +38,10 @@ class Hotpot(object):
         }
         # main_app for checking whether the app is considered as main app or combined to the main app
         self.main_app = main_app
+        # name for namespace
+        self.name = name
+        # base_rule
+        self.base_rule = base_rule
         # security key for session ref to config['security_key']
         self.security_key = self.config.get("security_key", b'YgHfXTZRK1t_tTGOh139WEpEii5gkqobuD89U7er1Ls=')
         # init AppGlobal
@@ -249,21 +253,31 @@ class Hotpot(object):
 
         return response(environ, start_response)
 
-    def route(self, rule, **options):
+    def route(self, rule, endpoint: str = None, **options):
         """
         Map url path to view functions (or say endpoints)
         Ex.
         @route("/")
         def index(request):
             return {}
+
+        !!!Important Note:
+        (1) if two or more routes have same rule, say "/", but different endpoint name, the first defined Rule will be called
+        (2) if two or more routes have same rule and same endpoint name, the last defined Rule will be called
         :param rule: url path, like "/"
+        :param endpoint: explicitly set endpoint, or it will be function name
         :param options:
         :return:
         """
 
         def decorator(f: Callable):
-            self.view_functions[f.__name__] = f
-            self.url_map.add(Rule(rule, endpoint=f.__name__))
+            _endpoint = endpoint
+            _rule = join_rules(self.base_rule, rule)
+            if _endpoint is None:
+                _endpoint = f.__name__
+            _endpoint = self.name + "." + _endpoint
+            self.view_functions[_endpoint] = f
+            self.url_map.add(Rule(_rule, endpoint=_endpoint))
 
         return decorator
 
