@@ -3,7 +3,13 @@ from typing import Callable
 
 from werkzeug.utils import redirect as werkzeug_redirect
 from werkzeug.wrappers import Request as RequestBase, Response as ResponseBase
+from cryptography.fernet import Fernet
+
 from .sessions import get_session, set_session, clear_session
+
+
+def generate_security_key():
+    return Fernet.generate_key()
 
 
 def join_rules(*rules):

@@ -58,7 +58,7 @@ class Hotpot(object):
         self._after_response = []
         # HttpExceptions view functions
         self.exception_all = None
-        self.exception_404 = lambda e: ResponseBase("Not Found")
+        self.exception_404 = lambda _app, e: ResponseBase("Not Found")
 
     def combine_app(self, other_app: 'Hotpot'):
 
@@ -94,7 +94,7 @@ class Hotpot(object):
         for f in other_app._after_response:
             self._after_response.append(f)
 
-        # Finnaly Del the other app
+        # Finally Del the other app
         del other_app
 
     def __del__(self):
@@ -196,6 +196,8 @@ class Hotpot(object):
             self.config = config_parser._sections
         else:
             raise TypeError("config should be dict or str (path)")
+        # reload config
+        self.security_key = self.config.get("security_key", b'YgHfXTZRK1t_tTGOh139WEpEii5gkqobuD89U7er1Ls=')
 
     def run(self):
         """
@@ -229,9 +231,9 @@ class Hotpot(object):
                 raise HTTPException("Service Error: Unsupported Response")
         except HTTPException as e:
             if self.exception_all is not None:
-                return self.exception_all(e)
+                return self.exception_all(self, e)
             if isinstance(e, NotFound):
-                return self.exception_404(e)
+                return self.exception_404(self, e)
             return e
 
     def wsgi_app(self, environ, start_response):
@@ -296,7 +298,7 @@ class Hotpot(object):
        Note: if use this function, all other view exception will not work.
         """
 
-        def decorator(f: Callable[[], ResponseBase]):
+        def decorator(f: Callable[['Hotpot', HTTPException], ResponseBase]):
             self.exception_all = f
 
         return decorator
@@ -312,7 +314,7 @@ class Hotpot(object):
         :return:
         """
 
-        def decorator(f: Callable[[], ResponseBase]):
+        def decorator(f: Callable[['Hotpot', HTTPException], ResponseBase]):
             self.exception_404 = f
 
         return decorator
