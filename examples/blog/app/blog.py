@@ -4,7 +4,7 @@ from src.hotpot.wrappers import Request
 from werkzeug.exceptions import NotFound
 
 
-app = Hotpot()
+app = Hotpot(main_app=False,name="blog")
 
 
 @app.route("/")

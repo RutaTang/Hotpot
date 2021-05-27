@@ -47,3 +47,5 @@ In this tutorial, we will build a simple poll web.
 
 
 ## Document
+
+### hotpot.app.Hotpot(mian_app=True,)
