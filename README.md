@@ -10,6 +10,10 @@ Hotpot is designed **almost** just for JSON RESTful, but for sure, you can rende
 *By the way, if you never know the hotpot, you may miss one of the most delicious,fragrant and tasty food in the world ~
 \_~*
 
+## Translation
+
+[中文简体]()
+
 ## Installing
 
 install and update hotpot using pip:
@@ -39,6 +43,7 @@ For more examples, please read the [Examples](https://github.com/RutaTang/Hotpot
 
 ## Tutorial
 
-In this tutorial, we will build a simple blog web.
+In this tutorial, we will build a simple poll web.
+
 
 ## Document
