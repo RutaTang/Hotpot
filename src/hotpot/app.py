@@ -202,9 +202,6 @@ class Hotpot(object):
     def run(self):
         """
         Simple WSGI Server for development other than production
-        :param hostname:
-        :param port:
-        :param debug: if debug is True, automatically reload while file changes
         :return:
         """
         hostname = self.config.get("hostname", "localhost")
@@ -260,7 +257,7 @@ class Hotpot(object):
         Map url path to view functions (or say endpoints)
         Ex.
         @route("/")
-        def index(request):
+        def index(_app,request):
             return {}
 
         !!!Important Note:
@@ -289,7 +286,7 @@ class Hotpot(object):
        set custom views for all http exceptions
        Ex.
        @app.view_exception_all()
-       def view_exception_all(error):
+       def view_exception_all(_app,error):
            if isinstance(error,NOT_FOUND):
                 return JSONResponse({"Not_Found": 404})
            return JSONResponse({"": 000})
@@ -308,7 +305,7 @@ class Hotpot(object):
         set view for http 404
         Ex.
         @app.view_exception_404()
-        def view_exception_404(error):
+        def view_exception_404(_app,error):
             print(error)
             return JSONResponse({"HttpException": 404})
         :return:
