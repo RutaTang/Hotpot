@@ -70,9 +70,12 @@ def login_required(security_key: bytes, fail_redirect: ResponseBase):
 
     Ex.
     @app.route("/user_info")
-    @login_required(app.security_key,redirect("/"))
-    def user_info(request):
-        return {"Name":"Ruta"}
+    def user_info(_app: Hotpot, request: Request):
+        @login_required(security_key=_app.security_key, fail_redirect=redirect("/"))
+        def wrap(_app: Hotpot, request):
+            return _app.app_global.db['user']
+
+        return wrap(_app, request)
 
     :param security_key: app security key for decrypt session info
     :param fail_redirect: can be redirect("/")

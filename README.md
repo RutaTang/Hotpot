@@ -49,6 +49,8 @@ In this tutorial, we will build a simple poll web.
 
 ## Document
 
+**Note**: Only list a few useful and important API which might be enough to build a simple app.
+
 ### hotpot.app
 
 #### hotpot.app.Hotpot(main_app=True,name="",base_rule="/")
@@ -224,20 +226,113 @@ def user_info(_app: Hotpot, request: Request):
 #### hotpot.sessions.clear_session(response: ResponseBase)
 
 _Parameters_:
+
 1. **response**: response of the request
 
 _Return_: None
 
-_Example_: 
+_Example_:
 
 ```python
 @app.route("/logout")
 def logout(_app: Hotpot, request: Request):
     clear_session(request)
-    return {"Msg":"Logout Successful"}
+    return {"Msg": "Logout Successful"}
 ```
 
 ### hotpot.utils
+
+#### hotpot.utils.generate_security_key():
+
+_Return_: security_key
+
+_Example_:
+
+```python
+app = Hotpot()
+app.add_config(
+    {
+        "hostname": 'localhost',
+        "port": 8080,
+        "debug": True,
+        "security_key": generate_security_key(),
+    }
+)
+app.run()
+```
+
+#### hotpot.utils.redirect(location, code=302)
+
+_Parameters_:
+
+1. **location**
+2. **code**
+
+_Return_: Response
+
+#### hotpot.utils.login(uid: str, response: ResponseBase, security_key: bytes)
+
+_Description_: a simple login util which store uid(user id) in cookie with encryption
+
+_Parameters_:
+
+1. **uid**: user id which will be stored in cookie with encryption
+2. **response**
+3. **security_key**: will be used to encrypt data
+
+_Return_: None
+
+_Example_:
+
+```python
+@app.route("/login")
+def login(_app: Hotpot, request: Request):
+    uid = "1" # get from database, here is just for simple
+    response = JSONResponse({"Msg": "Successfully Log In!"})
+    login(uid,response,_app.security_key)
+    return response
+```
+
+#### hotpot.utils.logout(response: ResponseBase)
+
+_Description_: a simple logout util which will clear cookie whose name is 'hotpot'
+
+_Parameters_:
+
+_Return_: None
+
+1. **response**
+
+```python
+@app.route("/logout")
+def logout(_app: Hotpot, request: Request):
+    response = JSONResponse({"Msg": "Successfully Log In!"})
+    logout(response)
+    return response
+```
+
+####  login_required(security_key: bytes, fail_redirect: ResponseBase)
+
+_Description_: a simple login required **Decorator** which check whether there is a 'uid' in cookie
+
+_Parameters_: 
+
+1. **security_key**: used to decrypt data stored in cookie
+2. **fail_redirect**: should be an instance of Response, e.g. redirect("/")
+
+_Return_: None
+
+_Example_:
+```python
+@app.route("/user_info")
+def user_info(_app: Hotpot, request: Request):
+    @login_required(security_key=_app.security_key, fail_redirect=redirect("/"))
+    def wrap(_app: Hotpot, request):
+        return {"name":"hotpot"}
+
+    return wrap(_app, request)
+```
+
 
 
 
