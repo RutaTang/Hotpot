@@ -16,6 +16,9 @@ app = Hotpot()
 #     "security_key": generate_security_key()
 # })
 
+@app.after_app()
+def after_app_f01(_app:Hotpot):
+    app.app_global.db.close()
 
 @app.route("/")
 def home(_app: 'Hotpot', request: Request):
