@@ -8,6 +8,7 @@ from src.hotpot.utils import redirect, generate_security_key, StyledJSON
 from src.hotpot.exceptions import NotFound
 
 app = Hotpot()
+app.app_global.db = "1"
 
 
 # you can change hostname,port,debug mode, even security_key,by add them to config
@@ -34,11 +35,6 @@ def get_token(_app: 'Hotpot', request: Request):
 @app.route("/user_info")
 def user_info(_app: 'Hotpot', request: Request):
     return {}
-
-
-@app.view_exception_404()
-def view_exception_404(_app, error):
-    return JSONResponse(StyledJSON(code=404, message="not found"))
 
 
 if __name__ == "__main__":

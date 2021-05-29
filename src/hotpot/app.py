@@ -5,12 +5,12 @@ import base64
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Response as ResponseBase, Request as RequestBase
 from werkzeug.routing import Map, Rule, MapAdapter
-from werkzeug.exceptions import HTTPException, NotFound
+from werkzeug.exceptions import *
 from cryptography.fernet import Fernet
 
 from .globals import AppGlobal
 from .wrappers import Request, JSONResponse
-from .utils import join_rules
+from .utils import join_rules, StyledJSON
 
 
 class Hotpot(object):
@@ -58,7 +58,14 @@ class Hotpot(object):
         self._after_response = []
         # HttpExceptions view functions
         self.exception_all = None
-        self.exception_404 = lambda _app, e: ResponseBase("Not Found")
+        self.exception_400 = lambda _app, e: JSONResponse(StyledJSON(code=400, messaga="Invalid Request"))
+        self.exception_401 = lambda _app, e: JSONResponse(StyledJSON(code=401, messaga="Unauthorized"))
+        self.exception_403 = lambda _app, e: JSONResponse(StyledJSON(code=403, messaga="Forbidden"))
+        self.exception_404 = lambda _app, e: JSONResponse(StyledJSON(code=404, messaga="Not Found"))
+        self.exception_406 = lambda _app, e: JSONResponse(StyledJSON(code=406, messaga="Not Acceptable"))
+        self.exception_410 = lambda _app, e: JSONResponse(StyledJSON(code=410, messaga="Gone"))
+        self.exception_422 = lambda _app, e: JSONResponse(StyledJSON(code=422, messaga="Unprocessable Entity"))
+        self.exception_500 = lambda _app, e: JSONResponse(StyledJSON(code=500, messaga="Internal Server Error"))
 
     def combine_app(self, other_app: 'Hotpot'):
 
@@ -231,6 +238,20 @@ class Hotpot(object):
                 return self.exception_all(self, e)
             if isinstance(e, NotFound):
                 return self.exception_404(self, e)
+            if isinstance(e, BadRequest):
+                return self.exception_400(self, e)
+            if isinstance(e, Unauthorized):
+                return self.exception_401(self, e)
+            if isinstance(e, Forbidden):
+                return self.exception_403(self, e)
+            if isinstance(e, NotAcceptable):
+                return self.exception_406(self, e)
+            if isinstance(e, Gone):
+                return self.exception_410(self, e)
+            if isinstance(e, UnprocessableEntity):
+                return self.exception_422(self, e)
+            if isinstance(e, InternalServerError):
+                return self.exception_500(self, e)
             return e
 
     def wsgi_app(self, environ, start_response):
@@ -300,7 +321,7 @@ class Hotpot(object):
 
         return decorator
 
-    def view_exception_404(self):
+    def view_exception(self, code):
         """
         set view for http 404
         Ex.
@@ -312,7 +333,11 @@ class Hotpot(object):
         """
 
         def decorator(f: Callable[['Hotpot', HTTPException], ResponseBase]):
+            if code not in (400, 401, 403, 404, 406, 410, 422, 500):
+                raise ValueError(
+                    f"http code {code} is not supported, please use view_exception_all to customize your view function for your http exceptions")
             self.exception_404 = f
+            setattr(self, f"exception_{code}", f)
 
         return decorator
 
