@@ -12,9 +12,18 @@ you want.
 *By the way, if you never know the hotpot, you may miss one of the most delicious,fragrant and tasty food in the world ~
 \_~*
 
+## Future Goal
+
+Hopefully, Hotpot will be designed as a fast RESTful web framework.
+
+## Progress
+
+Hotpot is still in the development stage.
+
 ## Translation
 
-[中文简体]()
+[中文简体]()： 还没开始写。。欢迎来帮忙！
+
 
 ## Installing
 
