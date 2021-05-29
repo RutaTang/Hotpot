@@ -34,3 +34,17 @@ def redirect(location, code=302):
     :return: response
     """
     return werkzeug_redirect(location=location, code=code)
+
+
+class StyledJSON(dict):
+    """
+    Styled uniformed json data
+    """
+
+    def __init__(self, code=200, message="", data=None,**kwargs):
+        super(StyledJSON, self).__init__()
+        self['code'] = code
+        self['message'] = message
+        self['data'] = data
+        for k,v in kwargs.items():
+            self[k] = v

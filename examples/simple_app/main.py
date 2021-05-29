@@ -1,12 +1,14 @@
+import datetime
 import json
 import os
 
 from src.hotpot.app import Hotpot
 from src.hotpot.wrappers import JSONResponse, Request
-from src.hotpot.utils import redirect, login_required, login as login_, logout as logout_, generate_security_key
-from src.hotpot.sessions import set_session, get_session, clear_session
+from src.hotpot.utils import redirect, generate_security_key, StyledJSON
+from src.hotpot.exceptions import NotFound
 
 app = Hotpot()
+
 
 # you can change hostname,port,debug mode, even security_key,by add them to config
 # app.add_config({
@@ -16,10 +18,6 @@ app = Hotpot()
 #     "security_key": generate_security_key()
 # })
 
-@app.after_app()
-def after_app_f01(_app:Hotpot):
-    app.app_global.db.close()
-
 @app.route("/")
 def home(_app: 'Hotpot', request: Request):
     json_object = {
@@ -28,9 +26,19 @@ def home(_app: 'Hotpot', request: Request):
     return json_object
 
 
+@app.route("/get_token")
+def get_token(_app: 'Hotpot', request: Request):
+    return {}
+
+
+@app.route("/user_info")
+def user_info(_app: 'Hotpot', request: Request):
+    return {}
+
+
 @app.view_exception_404()
 def view_exception_404(_app, error):
-    return JSONResponse({"HttpException": 404})
+    return JSONResponse(StyledJSON(code=404, message="not found"))
 
 
 if __name__ == "__main__":
