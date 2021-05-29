@@ -13,7 +13,6 @@ class Token(object):
     """
     Auth through Token
     """
-
     def __init__(self, security_key: Union[bytes, str]):
         if isinstance(security_key, str):
             security_key = bytes(security_key, 'utf-8')
