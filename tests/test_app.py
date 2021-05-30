@@ -9,6 +9,23 @@ from src.hotpot.wrappers import Request, JSONResponse
 
 
 class TestApp(TestCase):
+
+    def setUp(self) -> None:
+        self.app = Hotpot()
+        self.client = Client(self.app)
+
+    def test_getattr(self):
+        self.app.app_global.db = "db"
+        self.assertEqual("db", self.app.ag_db)
+
+    def test_api_help_doc(self):
+        def tmp():
+            return 1
+
+        print(tmp.__doc__)
+
+
+
     def get_response_body(self, location: str, method="GET", client=None):
         if client is None:
             client = self.client
@@ -25,10 +42,6 @@ class TestApp(TestCase):
         else:
             raise RuntimeError("Not Supported HTTP Method")
         return str(list(response[0])[0], 'utf-8')
-
-    def setUp(self) -> None:
-        self.app = Hotpot()
-        self.client = Client(self.app)
 
     def test_http_methods(self):
         @self.app.route("/")
