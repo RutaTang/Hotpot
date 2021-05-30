@@ -6,3 +6,4 @@ bp = Hotpot()
 @bp.route("/articles")
 def articles(_app: 'Hotpot', request: Request):
     return {}
+
