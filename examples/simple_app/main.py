@@ -41,8 +41,8 @@ def user_info(_app: 'Hotpot', request: Request):
 
 
 @app.route("/help")
-def help(_app, request):
-    return _app.api_help_doc
+def help(_app: 'Hotpot', request):
+    return _app.api_help_doc()
 
 
 if __name__ == "__main__":

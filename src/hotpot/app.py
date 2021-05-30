@@ -67,7 +67,7 @@ class Hotpot(object):
         self.exception_422 = lambda _app, e: JSONResponse(StyledJSON(code=422, messaga="Unprocessable Entity"))
         self.exception_500 = lambda _app, e: JSONResponse(StyledJSON(code=500, messaga="Internal Server Error"))
         # api help doc
-        self.api_help_doc = {}
+        self._api_help_doc = {}
 
     def __del__(self):
         # run all methods which after app end
@@ -80,6 +80,9 @@ class Hotpot(object):
         return wsgi_app_response
 
     # -------------Decorator Begin-------------
+    def api_help_doc(self):
+        return self._api_help_doc
+
     def after_app(self):
         """
         Run methods as app del
@@ -303,7 +306,7 @@ class Hotpot(object):
             rule_description = f.__doc__
             if rule_description is None:
                 rule_description = ""
-            self.api_help_doc[rule] = rule_description.strip()
+            self._api_help_doc[rule] = rule_description.strip()
 
         return decorator
 
