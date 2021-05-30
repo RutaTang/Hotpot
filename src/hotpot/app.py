@@ -25,7 +25,7 @@ class Hotpot(object):
         return {"Example":True}
     """
 
-    def __init__(self, main_app=True, name="", base_rule="/"):
+    def __init__(self, main_app=False, base_rule="/"):
         self.url_map = Map([])
         self.view_functions = {}
         self.config = {
@@ -38,8 +38,6 @@ class Hotpot(object):
         }
         # main_app for checking whether the app is considered as main app or combined to the main app
         self.main_app = main_app
-        # name for namespace
-        self.name = name
         # base_rule
         self.base_rule = base_rule
         # security key for session ref to config['security_key']
@@ -158,9 +156,13 @@ class Hotpot(object):
     def combine_app(self, other_app: 'Hotpot'):
 
         # combine self and other app url_map together
-        for _, rule_list in other_app.url_map._rules_by_endpoint.items():
+        for endpoint, rule_list in other_app.url_map._rules_by_endpoint.items():
             rule = rule_list[0]  # type:Rule
-            self.url_map.add(rule.empty())
+            rule_path = rule.rule
+            if self.base_rule == "/":
+                self.url_map.add(rule.empty())
+            else:
+                self.url_map.add(Rule(join_rules(self.base_rule,rule_path),endpoint=endpoint))
 
         # combine self and other app view_functions together
         for function_name, view_function in other_app.view_functions.items():
@@ -297,8 +299,7 @@ class Hotpot(object):
             _endpoint = endpoint
             _rule = join_rules(self.base_rule, rule)
             if _endpoint is None:
-                _endpoint = f.__name__
-            _endpoint = self.name + "." + _endpoint
+                _endpoint = str(id(f))
             self.view_functions[_endpoint] = f
             self.url_map.add(Rule(_rule, endpoint=_endpoint))
 

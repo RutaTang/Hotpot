@@ -2,7 +2,7 @@ from setuptools import setup,find_packages
 
 setup(
     name='hotpot',
-    version='1.0.0',
+    version='2.0.1',
     author='Ruta Tang',
     author_email="953259325@qq.com",
     url="https://github.com/RutaTang/Hotpot",
@@ -12,6 +12,7 @@ setup(
     install_requires=[
         'werkzeug',
         'cryptography',
+        'pyjwt',
     ],
     python_requires=">=3.6",
 )
