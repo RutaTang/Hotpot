@@ -169,7 +169,7 @@ class Hotpot(object):
             self.view_functions[function_name] = view_function
 
         # Note: Config will not be influenced or changed by combing other app
-        # Same as: security_key,app_global,exception_all,exception_404
+        # Same as: security_key,app_global,exception_all,exceptions
 
         # combine self and other before_app function together
         for f in other_app._after_app:
@@ -219,6 +219,10 @@ class Hotpot(object):
         Simple WSGI Server for development other than production
         :return:
         """
+
+        # if self is not main app, not allowed to run
+        if not self.main_app:
+            raise RuntimeError("App with that main_app is False is not allowed to run!")
         hostname = self.config.get("hostname", "localhost")
         port = self.config.get("port", 8080)
         debug = self.config.get("debug", True)

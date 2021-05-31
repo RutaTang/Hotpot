@@ -2,7 +2,7 @@ from setuptools import setup,find_packages
 
 setup(
     name='hotpot',
-    version='2.0.2',
+    version='2.1.0',
     author='Ruta Tang',
     author_email="953259325@qq.com",
     url="https://github.com/RutaTang/Hotpot",
