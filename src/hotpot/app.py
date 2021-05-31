@@ -191,6 +191,9 @@ class Hotpot(object):
         for f in other_app._after_response:
             self._after_response.append(f)
 
+        # combine self and other _api_help_doc
+        for rule,doc in other_app._api_help_doc.items():
+            self._api_help_doc[join_rules(self.base_rule,rule)] = doc
         # Finally Del the other app
         del other_app
 
@@ -307,7 +310,7 @@ class Hotpot(object):
             rule_description = f.__doc__
             if rule_description is None:
                 rule_description = ""
-            self._api_help_doc[rule] = rule_description.strip()
+            self._api_help_doc[join_rules(self.base_rule,rule)] = rule_description.strip()
 
         return decorator
 
