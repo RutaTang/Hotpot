@@ -1,10 +1,11 @@
-from sqlalchemy import create_engine
 
 from src.hotpot import Hotpot, Request
+
 from v1 import bp
+from v1.models import engine
 
 app = Hotpot(main_app=True)
-app.app_global.engine = create_engine("mysql+pymysql://root:password@localhost:3306/test")
+app.app_global.engine = engine
 
 app.combine_app(bp)
 
