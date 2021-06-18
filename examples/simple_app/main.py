@@ -3,12 +3,12 @@ import json
 import os
 
 from src.hotpot.app import Hotpot
-from src.hotpot.wrappers import JSONResponse, Request
-from src.hotpot.utils import redirect, generate_security_key, StyledJSON
-from src.hotpot.exceptions import NotFound
+from src.hotpot.wrappers import Response, Request
+from src.hotpot.utils import redirect, generate_security_key
+from src.hotpot.exceptions import NotFound, HTTPException, make_json_http_exception, MethodNotAllowed
+from src.hotpot.globals import request, current_app, g
 
-app = Hotpot()
-app.app_global.db = "db"
+app = Hotpot(main_app=True)
 
 
 # you can change hostname,port,debug mode, even security_key,by add them to config
@@ -19,30 +19,34 @@ app.app_global.db = "db"
 #     "security_key": generate_security_key()
 # })
 
+
 @app.route("/")
-def home(_app: 'Hotpot', request: Request):
+@app.route("/index/")
+def home():
     json_object = {
         "Home": "This is a home page"
     }
     return json_object
 
 
+@app.route(r"/<regex('\d?'):phone>")
+def regex(phone):
+    print(phone)
+    return {"regex": True}
+
+
 @app.route("/get_token")
-def get_token(_app: 'Hotpot', request: Request):
+def get_token():
     """
     get token which is used to access data
     """
+    print("enter")
     return {}
 
 
 @app.route("/user_info")
-def user_info(_app: 'Hotpot', request: Request):
+def user_info():
     return {}
-
-
-@app.route("/help")
-def help(_app: 'Hotpot', request):
-    return _app.api_help_doc()
 
 
 if __name__ == "__main__":

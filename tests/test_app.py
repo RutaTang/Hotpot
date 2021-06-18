@@ -5,7 +5,7 @@ from werkzeug.test import Client
 from tinydb import TinyDB
 
 from src.hotpot.app import Hotpot
-from src.hotpot.wrappers import Request, JSONResponse
+from src.hotpot.wrappers import Request, Response
 
 
 class TestApp(TestCase):
@@ -53,7 +53,7 @@ class TestApp(TestCase):
 
         @self.app.route("/index2")
         def index2(_app, request: Request):
-            response = JSONResponse({"index": 2})
+            response = Response({"index": 2})
             return response
 
         self.assertEqual(self.get_response_body("/index1"), r'{"index": 1}')
@@ -232,11 +232,11 @@ class TestApp(TestCase):
     def test_view_exception_all(self):
         @self.app.view_exception_all()
         def view_exception_all(_app, error):
-            return JSONResponse({"Custom HttpException": True})
+            return Response({"Custom HttpException": True})
 
         @self.app.view_exception_404()
         def view_exception_404(_app, error):
-            return JSONResponse({"Not Found": True})
+            return Response({"Not Found": True})
 
         self.assertNotEqual(self.get_response_body("/"), r'{"Not Found": true}')
         self.assertEqual(self.get_response_body("/"), r'{"Custom HttpException": true}')
@@ -244,6 +244,6 @@ class TestApp(TestCase):
     def test_view_exception_404(self):
         @self.app.view_exception_404()
         def view_exception_404(_app, error):
-            return JSONResponse({"Not Found": True})
+            return Response({"Not Found": True})
 
         self.assertEqual(self.get_response_body("/"), r'{"Not Found": true}')

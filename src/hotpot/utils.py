@@ -3,6 +3,8 @@ from typing import Callable
 
 from werkzeug.utils import redirect as werkzeug_redirect
 from werkzeug.wrappers import Request as RequestBase, Response as ResponseBase
+from werkzeug.routing import Map, Rule, BaseConverter
+
 from cryptography.fernet import Fernet
 
 
@@ -36,15 +38,8 @@ def redirect(location, code=302):
     return werkzeug_redirect(location=location, code=code)
 
 
-class StyledJSON(dict):
-    """
-    Styled uniformed json data
-    """
+class RegexConverter(BaseConverter):
+    def __init__(self, url_map, item):
+        super().__init__(url_map)
+        self.regex = item
 
-    def __init__(self, code=200, message="", data=None,**kwargs):
-        super(StyledJSON, self).__init__()
-        self['code'] = code
-        self['message'] = message
-        self['data'] = data
-        for k,v in kwargs.items():
-            self[k] = v

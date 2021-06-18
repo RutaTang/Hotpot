@@ -7,7 +7,7 @@ class Request(RequestBase):
     pass
 
 
-class JSONResponse(ResponseBase):
+class Response(ResponseBase):
     """
     Especially for JSON Response which is also only one supported in this WebFramework:
     Ex.
@@ -18,4 +18,4 @@ class JSONResponse(ResponseBase):
 
     def __init__(self, json_object, **kwargs):
         json_str = json.dumps(json_object)
-        super(JSONResponse, self).__init__(response=json_str, **kwargs)
+        super(Response, self).__init__(response=json_str, **kwargs)
