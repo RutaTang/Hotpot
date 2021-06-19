@@ -193,7 +193,6 @@ class Hotpot(object):
         for f in other_app._request_response_end:
             self._request_response_end.append(f)
 
-
         # Finally Del the other app
         del other_app
 
@@ -240,10 +239,11 @@ class Hotpot(object):
             #   return Response()
             view_function_info = self.view_functions_info[endpoint]
             view_function = view_function_info['f']
-            if inspect.isclass(view_function) and issubclass(view_function, Resource):
+            if inspect.isclass(view_function) and issubclass(view_function,
+                                                             Resource):  # For View Class of SubClass Of Resource
                 init_args = view_function_info['args']
                 init_kwargs = view_function_info['kwargs']
-                view_function = view_function(*init_args,**init_kwargs)
+                view_function = view_function(*init_args, **init_kwargs)
                 view_function = getattr(view_function, request.method.lower())
             response_or_dict = view_function(**values)
             if isinstance(response_or_dict, dict):
@@ -306,7 +306,7 @@ class Hotpot(object):
             elif inspect.isfunction(f):
                 pass
             else:
-                raise TypeError("view function should be function, instance of Resource, or class of Resource")
+                raise TypeError("view function should be a function or a subclass of Resource")
             self.url_map.add(Rule(_rule, endpoint=_endpoint, methods=methods))
             self.view_functions_info[_endpoint] = {"f": f, "args": class_init_args, "kwargs": class_init_kwargs}
             return f
