@@ -2,7 +2,7 @@ import datetime
 import json
 import os
 
-from src.hotpot.app import Hotpot
+from src.hotpot.app import Hotpot, Resource
 from src.hotpot.wrappers import Response, Request
 from src.hotpot.utils import redirect, generate_security_key
 from src.hotpot.exceptions import NotFound, HTTPException, make_json_http_exception, MethodNotAllowed
@@ -35,18 +35,15 @@ def regex(phone):
     return {"regex": True}
 
 
-@app.route("/get_token")
-def get_token():
-    """
-    get token which is used to access data
-    """
-    print("enter")
-    return {}
+@app.route("/help")
+def help_doc():
+    return current_app.api_help_doc()
 
 
-@app.route("/user_info")
-def user_info():
-    return {}
+@app.route("/article")
+class Article(Resource):
+    def get(self):
+        return {}
 
 
 if __name__ == "__main__":

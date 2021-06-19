@@ -1,6 +1,9 @@
-from typing import Callable, Union, Iterable
+from typing import Callable, Union, Iterable, ClassVar, Type
+from types import FunctionType
+from abc import ABC, abstractmethod
 import configparser
 import base64
+import inspect
 
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Response as ResponseBase, Request as RequestBase
@@ -13,6 +16,26 @@ from .utils import join_rules, RegexConverter
 from .context import RequestContext
 from .globals import request
 from .exceptions import *
+
+
+class Resource(ABC):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def __are_methods_implemented(cls, methods: [str]):
+        """
+        Check whether Resource implement all corresponding methods with function name in lower letter, e.g. def get(self)
+        :param methods: [str], e.g. ["GET","POST"]
+        :return:
+        """
+        for method in methods:
+            if not hasattr(cls, method.lower()):
+                raise NotImplementedError(f"corresponding http methods {methods} should be implemented")
+
+    @classmethod
+    def are_methods_implemented(cls, methods: [str]):
+        cls.__are_methods_implemented(methods)
 
 
 class Hotpot(object):
@@ -29,7 +52,7 @@ class Hotpot(object):
 
     def __init__(self, main_app=False, base_rule="/"):
         self.url_map = Map([])
-        self.view_functions = {}
+        self.view_functions_info = {}
         self.config = {
             # Default Config
             "hostname": 'localhost',
@@ -52,8 +75,6 @@ class Hotpot(object):
         self._after_response = []
         # request_response_end
         self._request_response_end = []
-        # api help doc
-        self._api_help_doc = {}
         # whether automatically change normal exception to json exception
         self.json_exception = True
 
@@ -71,9 +92,6 @@ class Hotpot(object):
         return wsgi_app_response
 
     # -------------Decorator Begin-------------
-    def api_help_doc(self):
-        return self._api_help_doc
-
     def hook_del_app(self):
         """
         Run methods as app del
@@ -152,9 +170,9 @@ class Hotpot(object):
             else:
                 self.url_map.add(Rule(join_rules(self.base_rule, rule_path), endpoint=endpoint))
 
-        # combine self and other app view_functions together
-        for function_name, view_function in other_app.view_functions.items():
-            self.view_functions[function_name] = view_function
+        # combine self and other app view_functions_info together
+        for endpoint, info in other_app.view_functions_info.items():
+            self.view_functions_info[endpoint] = info
 
         # Note: Config will not be influenced or changed by combing other app
         # Same as: security_key,app_global,exception_all,exceptions
@@ -163,13 +181,19 @@ class Hotpot(object):
         for f in other_app._del_app:
             self._del_app.append(f)
 
+        # combine self and other _before_request function together
+        for f in other_app._before_request:
+            self._before_request.append(f)
+
         # combine self and other before_response function together
         for f in other_app._after_response:
             self._after_response.append(f)
 
-        # combine self and other _api_help_doc
-        for rule, doc in other_app._api_help_doc.items():
-            self._api_help_doc[join_rules(self.base_rule, rule)] = doc
+        # combine self and other request_response_end function together
+        for f in other_app._request_response_end:
+            self._request_response_end.append(f)
+
+
         # Finally Del the other app
         del other_app
 
@@ -214,7 +238,14 @@ class Hotpot(object):
             #   return {"Name":""}
             #   #or
             #   return Response()
-            response_or_dict = self.view_functions[endpoint](**values)
+            view_function_info = self.view_functions_info[endpoint]
+            view_function = view_function_info['f']
+            if inspect.isclass(view_function) and issubclass(view_function, Resource):
+                init_args = view_function_info['args']
+                init_kwargs = view_function_info['kwargs']
+                view_function = view_function(*init_args,**init_kwargs)
+                view_function = getattr(view_function, request.method.lower())
+            response_or_dict = view_function(**values)
             if isinstance(response_or_dict, dict):
                 return Response(response_or_dict)
             elif isinstance(response_or_dict, ResponseBase):
@@ -242,7 +273,9 @@ class Hotpot(object):
                 f()
         return response(environ, start_response)
 
-    def route(self, rule, endpoint: str = None, methods: Iterable[str] = ["GET"], **options):
+    def route(self, rule, endpoint: str = None, methods: Iterable[str] = ["GET"], class_init_args=[],
+              class_init_kwargs: dict = {},
+              **options):
         """
         Map url path to view functions (or say endpoints)
         Ex.
@@ -257,23 +290,25 @@ class Hotpot(object):
         :param rule: url path, like "/"
         :param endpoint: explicitly set endpoint, or it will be function name
         :param methods: allowed http methods, default just allow "GET"
+        :param class_init_args: arguments when init Resource, only for Resource Class,
+        :param class_init_kwargs: arguments when init Resource, only for Resource Class
         :param options:
         :return:
         """
 
-        def decorator(f: Callable):
+        def decorator(f: Union[FunctionType, Resource, Type[Resource]]):
             _endpoint = endpoint
             _rule = join_rules(self.base_rule, rule)
             if _endpoint is None:
                 _endpoint = str(id(f))
-            self.view_functions[_endpoint] = f
+            if inspect.isclass(f) and issubclass(f, Resource):
+                f.are_methods_implemented(methods=methods)  # check whether all http methods implemented
+            elif inspect.isfunction(f):
+                pass
+            else:
+                raise TypeError("view function should be function, instance of Resource, or class of Resource")
             self.url_map.add(Rule(_rule, endpoint=_endpoint, methods=methods))
-
-            # add to api help doc
-            rule_description = f.__doc__
-            if rule_description is None:
-                rule_description = ""
-            self._api_help_doc[join_rules(self.base_rule, rule)] = rule_description.strip()
+            self.view_functions_info[_endpoint] = {"f": f, "args": class_init_args, "kwargs": class_init_kwargs}
             return f
 
         return decorator
@@ -285,45 +320,3 @@ class Hotpot(object):
         :return:
         """
         self.url_map.converters['regex'] = RegexConverter  # Regex Converters: /<regex("[0-9]"):phone)>
-
-    # -----------handle http exception Start-----------
-    def view_exception_all(self):
-        """
-       set custom views for all http exceptions
-       Ex.
-       @app.view_exception_all()
-       def view_exception_all(_app,error):
-           if isinstance(error,NOT_FOUND):
-                return JSONResponse({"Not_Found": 404})
-           return JSONResponse({"": 000})
-       :return:
-
-       Note: if use this function, all other view exception will not work.
-        """
-
-        def decorator(f: Callable[['Hotpot', HTTPException], ResponseBase]):
-            self.exception_all = f
-
-        return decorator
-
-    def view_exception(self, code):
-        """
-        set view for http 404
-        Ex.
-        @app.view_exception_404()
-        def view_exception_404(_app,error):
-            print(error)
-            return JSONResponse({"HttpException": 404})
-        :return:
-        """
-
-        def decorator(f: Callable[['Hotpot', HTTPException], ResponseBase]):
-            if code not in (400, 401, 403, 404, 406, 410, 422, 500):
-                raise ValueError(
-                    f"http code {code} is not supported, please use view_exception_all to customize your view function for your http exceptions")
-            self.exception_404 = f
-            setattr(self, f"exception_{code}", f)
-
-        return decorator
-
-    # -----------handle http exception End-----------

@@ -13,6 +13,7 @@ setup(
         'werkzeug',
         'cryptography',
         'pyjwt',
+        "MarkupSafe",
     ],
     python_requires=">=3.6",
 )
