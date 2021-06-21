@@ -19,9 +19,6 @@ from .exceptions import *
 
 
 class Resource(ABC):
-    def __init__(self, *args, **kwargs):
-        pass
-
     @classmethod
     def __are_methods_implemented(cls, methods: [str]):
         """

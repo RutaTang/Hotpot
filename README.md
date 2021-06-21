@@ -1,4 +1,5 @@
 # Hotpot
+目前处于开发阶段，更新过快，文档与实际框架内容有出入，暂勿使用
 
 **A tiny and easy python web framework just for your fun! :)**
 

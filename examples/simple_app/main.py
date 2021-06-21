@@ -35,10 +35,13 @@ def regex(phone):
     return {"regex": True}
 
 
-@app.route("/article", methods=["GET", "POST"])
+@app.route("/article", methods=["GET", "POST"], class_init_args=["RUTA"])
 class Article(Resource):
+    def __init__(self, name):
+        self.name = name
+
     def get(self):
-        print(current_app.url_map)
+        print(__name__)
         return {"method": "get"}
 
     def post(self):
