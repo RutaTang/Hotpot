@@ -35,15 +35,14 @@ def regex(phone):
     return {"regex": True}
 
 
-@app.route("/help")
-def help_doc():
-    return current_app.api_help_doc()
-
-
-@app.route("/article")
+@app.route("/article", methods=["GET", "POST"])
 class Article(Resource):
     def get(self):
-        return {}
+        print(current_app.url_map)
+        return {"method": "get"}
+
+    def post(self):
+        return {"method": "post"}
 
 
 if __name__ == "__main__":

@@ -73,8 +73,6 @@ class Hotpot(object):
         self._before_request = []
         # after_response
         self._after_response = []
-        # request_response_end
-        self._request_response_end = []
         # whether automatically change normal exception to json exception
         self.json_exception = True
 
@@ -92,6 +90,7 @@ class Hotpot(object):
         return wsgi_app_response
 
     # -------------Decorator Begin-------------
+    # TODO: review, redesign, and recode hooks
     def hook_del_app(self):
         """
         Run methods as app del
@@ -141,24 +140,6 @@ class Hotpot(object):
 
         return decorator
 
-    def request_response_end(self):
-        """
-        Run methods before the request-response end (or say, after call all methods in self._after_response)
-        f has no parameters and return nothing
-
-        @request_response_end()
-        def request_response_end() -> None:
-
-        Usage: e.g. close db connection
-        :return:
-        """
-
-        def decorator(f):
-            self._request_response_end.append(f)
-            return f
-
-        return decorator
-
     # -------------Decorator End -------------
     def combine_app(self, other_app: 'Hotpot'):
         # combine self and other app url_map together
@@ -188,10 +169,6 @@ class Hotpot(object):
         # combine self and other before_response function together
         for f in other_app._after_response:
             self._after_response.append(f)
-
-        # combine self and other request_response_end function together
-        for f in other_app._request_response_end:
-            self._request_response_end.append(f)
 
         # Finally Del the other app
         del other_app
@@ -268,9 +245,6 @@ class Hotpot(object):
             # after make response, customize response generally
             for f in self._after_response:
                 response = f(response)
-            # before request_response end
-            for f in self._request_response_end:
-                f()
         return response(environ, start_response)
 
     def route(self, rule, endpoint: str = None, methods: Iterable[str] = ["GET"], class_init_args=[],
