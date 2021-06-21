@@ -47,7 +47,9 @@ class Hotpot(object):
         return {"Example":True}
     """
 
-    def __init__(self, main_app=False, base_rule="/"):
+    def __init__(self, name: str, main_app=False, base_rule="/"):
+        # name is for namespace of endpoints
+        self.name = name
         self.url_map = Map([])
         self.view_functions_info = {}
         self.config = {
@@ -143,14 +145,18 @@ class Hotpot(object):
         for endpoint, rule_list in other_app.url_map._rules_by_endpoint.items():
             rule = rule_list[0]  # type:Rule
             rule_path = rule.rule
+            rule = rule.empty()
+            rule.endpoint = self.name + "." + endpoint
             if self.base_rule == "/":
-                self.url_map.add(rule.empty())
+                self.url_map.add(rule)
             else:
-                self.url_map.add(Rule(join_rules(self.base_rule, rule_path), endpoint=endpoint))
+                rule.rule = join_rules(self.base_rule, rule_path)
+                self.url_map.add(rule)
 
         # combine self and other app view_functions_info together
         for endpoint, info in other_app.view_functions_info.items():
-            self.view_functions_info[endpoint] = info
+            new_endpoint = self.name + '.' + endpoint
+            self.view_functions_info[new_endpoint] = info
 
         # Note: Config will not be influenced or changed by combing other app
         # Same as: security_key,app_global,exception_all,exceptions
@@ -271,7 +277,7 @@ class Hotpot(object):
             _endpoint = endpoint
             _rule = join_rules(self.base_rule, rule)
             if _endpoint is None:
-                _endpoint = str(id(f))
+                _endpoint = str(self.name + "." + f.__name__)
             if inspect.isclass(f) and issubclass(f, Resource):
                 f.are_methods_implemented(methods=methods)  # check whether all http methods implemented
             elif inspect.isfunction(f):

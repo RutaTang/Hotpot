@@ -8,7 +8,8 @@ from src.hotpot.utils import redirect, generate_security_key
 from src.hotpot.exceptions import NotFound, HTTPException, make_json_http_exception, MethodNotAllowed
 from src.hotpot.globals import request, current_app, g
 
-app = Hotpot(main_app=True)
+
+app = Hotpot("main", main_app=True)
 
 
 # you can change hostname,port,debug mode, even security_key,by add them to config
@@ -35,13 +36,10 @@ def regex(phone):
     return {"regex": True}
 
 
-@app.route("/article", methods=["GET", "POST"], class_init_args=["RUTA"])
+@app.route("/article", methods=["GET", "POST"])
 class Article(Resource):
-    def __init__(self, name):
-        self.name = name
-
     def get(self):
-        print(__name__)
+        print(current_app.url_map)
         return {"method": "get"}
 
     def post(self):
